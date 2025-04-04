@@ -20,13 +20,13 @@ def show():
     st.subheader("Resume Info")
 
     # Create two horizontally aligned buttons
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns([1, 1, 4]) 
 
     with col1:
-        btn1 = st.button("Show Data 1")
+        btn1 = st.button("Scan Resumes")
 
     with col2:
-        btn2 = st.button("Show Data 2")
+        btn2 = st.button("Send Resumes")
 
 
 
