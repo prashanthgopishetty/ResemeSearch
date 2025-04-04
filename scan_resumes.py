@@ -4,6 +4,10 @@ import pdfplumber
 import docx
 import pandas as pd
 import spacy
+import json
+
+
+
 
 # Load NLP model (download using: python -m spacy download en_core_web_sm)
 nlp = spacy.load("en_core_web_sm")
@@ -50,9 +54,58 @@ def extract_location(text):
     locations = [ent.text for ent in doc.ents if ent.label_ == "GPE"]
     return ", ".join(set(locations)) if locations else "Not Found"
 
+import os
+from mistralai import Mistral
+
+def mistral_gen(text_list):
+    os.environ["MISTRAL_API_KEY"] = 'ZGQWj5s9uuoxdPv4hZhkysnUAnLN0pgo'
+    api_key = os.environ["MISTRAL_API_KEY"]
+    model = "mistral-large-latest"
+
+    client = Mistral(api_key=api_key)
+    prompt = f'''
+    Please extract the following details from the resumes:
+            - Name
+            - Location
+            - Skill Set
+            - phone number
+
+            Return the data only json array format, without any additional text or notes:
+            
+
+            Here is the  list of resume text:
+            {text_list}
+
+    '''
+    chat_response = client.chat.complete(
+        model= model,
+        messages = [
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ]
+    )
+    res = chat_response.choices[0].message.content
+
+    if res.startswith("```json"):
+        res = re.sub(r"```json\n(.*?)\n```", r"\1", res, flags=re.DOTALL)
+    elif res.startswith("'''json"):
+        res = re.sub(r"'''json\n(.*?)\n'''", r"\1", res, flags=re.DOTALL)
+
+    # Convert the string into a valid Python object
+    try:
+        parsed_response = json.loads(res)
+        print(parsed_response)  # Now it's a Python list/dictionary
+    except json.JSONDecodeError:
+        print("Error: The response is not valid JSON")
+
+    print(parsed_response)
+    return parsed_response
+
 def process_resumes():
     data = []
-
+    text_list = []
     for filename in os.listdir(RESUME_FOLDER):
         if re.match(r"^[^a-zA-Z0-9]", filename):  # Ignore files that start with special characters
             continue
@@ -65,7 +118,7 @@ def process_resumes():
             text = extract_text_from_docx(file_path)
         else:
             continue
-
+        text_list.append(text)
         name = extract_name(text)
         phone = extract_phone(text)
         email = extract_email(text)
@@ -73,10 +126,9 @@ def process_resumes():
         location = extract_location(text)
 
         data.append({"Filename": filename, "Name": name, "Phone": phone, "Email": email, "Skills": skills, "Location": location})
-
-    df = pd.DataFrame(data)
-    df.to_excel("Resume_Summary.xlsx", index=False)
-    print("Excel file generated successfully!")
+    res = mistral_gen(text_list)
+    print(res)
+    return res
 
 # Run the script
-process_resumes()
+#process_resumes()

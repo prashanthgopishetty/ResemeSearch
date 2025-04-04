@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Streamlit: Debug",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/venv/bin/streamlit",  // Path to the Streamlit executable (adjust for your OS)
+            "args": [
+                "run",
+                "${workspaceFolder}/main.py"  // Your main Streamlit file (adjust filename as needed)
+            ],
+            "console": "integratedTerminal",  // Use the VS Code terminal for output
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"  // Ensures your workspace is in the Python path
+            },
+            "envFile": "${workspaceFolder}/.env",  // Optionally add a .env file for environment variables
+            "debugOptions": ["RedirectOutput"]
+        }
+    ]
+}
